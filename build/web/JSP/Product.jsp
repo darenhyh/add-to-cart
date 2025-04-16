@@ -1,18 +1,41 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page import="java.util.List" %>
 <%@page import="model.Product" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <!DOCTYPE html>
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/CSS/ProductCSS.css?v=3">
         <title>Product</title>
         <style>
-            .cart-container {
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+            }
+
+            .outer-container {
+                width: 100%;
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+
+            .inner-container {
                 position: relative;
-                display: inline-block;
+                padding-top: 60px;
+            }
+
+            .cart-container {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                z-index: 100;
             }
             
             .cart-badge {
@@ -29,6 +52,76 @@
                 align-items: center;
                 font-size: 12px;
                 font-weight: bold;
+            }
+
+            .products {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 20px;
+            }
+
+            .product-item {
+                background-color: white;
+                border-radius: 8px;
+                padding: 15px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+                transition: transform 0.3s ease;
+            }
+
+            .product-item:hover {
+                transform: translateY(-5px);
+            }
+
+            .product-image {
+                width: 100%;
+                height: 200px;
+                object-fit: cover;
+                border-radius: 4px;
+            }
+
+            figure {
+                margin-bottom: 15px;
+            }
+
+            figcaption {
+                text-align: center;
+                margin-top: 5px;
+                font-size: 14px;
+                color: #666;
+            }
+
+            h2 {
+                font-size: 18px;
+                margin-bottom: 10px;
+                color: #333;
+            }
+
+            .price {
+                font-weight: bold;
+                color: #e44d26;
+                margin-bottom: 10px;
+            }
+
+            p {
+                margin-bottom: 15px;
+                color: #666;
+                font-size: 14px;
+            }
+
+            button {
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                padding: 10px 15px;
+                border-radius: 4px;
+                cursor: pointer;
+                width: 100%;
+                font-size: 14px;
+                transition: background-color 0.3s ease;
+            }
+
+            button:hover {
+                background-color: #45a049;
             }
             
             .product-added-message {
@@ -52,39 +145,45 @@
         <div class="outer-container">
             <div class="inner-container">
                 <div class="cart-container">
-                    <a href="${pageContext.request.contextPath}/CartServlet">
-                        <img src="${pageContext.request.contextPath}/ICON/cart.svg" alt="Cart" width="45" height="45">
-                        <c:if test="${cartSize > 0}">
-                            <span class="cart-badge">${cartSize}</span>
-                        </c:if>
+                    <a href="<%= request.getContextPath() %>/CartServlet">
+                        <img src="<%= request.getContextPath() %>/ICON/cart.svg" alt="Cart" width="45" height="45">
+                        <% 
+                            Integer cartSize = (Integer) session.getAttribute("cartSize");
+                            if (cartSize != null && cartSize > 0) {
+                        %>
+                            <span class="cart-badge"><%= cartSize %></span>
+                        <% } %>
                     </a>
                 </div>
                
                 <section class="products">
-                    <c:choose>
-                        <c:when test="${not empty products}">
-                            <c:forEach var="p" items="${products}">
-                                <article class="product-item">
-                                    <form action="${pageContext.request.contextPath}/CartServlet" method="POST" class="add-to-cart-form">
-                                        <figure>
-                                            <img class="product-image" src="${pageContext.request.contextPath}/ProductImages/${p.getImageUrl()}" alt="${p.getName()}">
-                                            <figcaption>${p.getName()}</figcaption>
-                                        </figure>
-                                        <h2>${p.getName()}</h2>
-                                        <p class="price">RM${p.getPrice()}</p>
-                                        <p>${p.getDescription()}</p>
-                                        <input type="hidden" name="PRODUCT_ID" value="${p.getId()}" /> 
-                                        <input type="hidden" name="PRODUCTNAME" value="${p.getName()}" />
-                                        <input type="hidden" name="PRICE" value="${p.getPrice()}" />
-                                        <button type="submit" class="add-to-cart-btn">Add to cart</button>
-                                    </form>
-                                </article>
-                            </c:forEach>
-                        </c:when>
-                        <c:otherwise>
-                            <p>No products available.</p>
-                        </c:otherwise>
-                    </c:choose>
+                    <% 
+                        List<Product> products = (List<Product>) request.getAttribute("products");
+                        if (products != null && !products.isEmpty()) {
+                            for (Product p : products) {
+                    %>
+                        <article class="product-item">
+                            <form action="<%= request.getContextPath() %>/CartServlet" method="POST" class="add-to-cart-form">
+                                <figure>
+                                    <img class="product-image" src="<%= request.getContextPath() %>/ProductImages/<%= p.getImageUrl() %>" alt="<%= p.getName() %>">
+                                    <figcaption><%= p.getName() %></figcaption>
+                                </figure>
+                                <h2><%= p.getName() %></h2>
+                                <p class="price">RM<%= p.getPrice() %></p>
+                                <p><%= p.getDescription() %></p>
+                                <input type="hidden" name="PRODUCT_ID" value="<%= p.getId() %>" /> 
+                                <input type="hidden" name="PRODUCTNAME" value="<%= p.getName() %>" />
+                                <input type="hidden" name="PRICE" value="<%= p.getPrice() %>" />
+                                <input type="hidden" name="IMAGE_URL" value="<%= p.getImageUrl() %>" />
+                                <button type="submit" class="add-to-cart-btn">Add to cart</button>
+                            </form>
+                        </article>
+                    <% 
+                            }
+                        } else {
+                    %>
+                        <p>No products available.</p>
+                    <% } %>
                 </section>
             </div>         
         </div>
