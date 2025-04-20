@@ -4,242 +4,352 @@
 <%@page import="java.text.DecimalFormat" %>
 
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Shopping Cart</title>
-        <style>
-            * {
-                box-sizing: border-box;
-            }
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Bag</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
 
-            body {
-                font-family: Arial, sans-serif;
-                line-height: 1.6;
-                margin: 0;
-                padding: 0;
-                background-color: #f4f4f4;
-            }
+        body {
+            padding: 40px;
+            color: #000;
+            background-color: #fff;
+        }
 
-            .container {
-                width: 90%;
-                max-width: 1200px;
-                margin: 30px auto;
-                padding: 20px;
-                background-color: #fff;
-                border-radius: 8px;
-                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
 
-            h1 {
-                text-align: center;
-                margin-bottom: 30px;
-                color: #333;
-            }
+        .bag-section {
+            flex: 1;
+            min-width: 300px;
+        }
 
-            .empty-cart {
-                text-align: center;
-                padding: 50px 0;
-            }
+        .summary-section {
+            width: 350px;
+        }
 
-            .empty-cart p {
-                font-size: 18px;
-                margin-bottom: 20px;
-            }
+        h1 {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
 
-            table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-bottom: 30px;
-            }
+        h2 {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
 
-            th, td {
-                padding: 15px;
-                text-align: left;
-                border-bottom: 1px solid #ddd;
-            }
+        .total-info {
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
 
-            th {
-                background-color: #f8f8f8;
-                font-weight: bold;
-            }
+        .reservation-note {
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
 
-            .product-info {
-                display: flex;
-                align-items: center;
-            }
+        .cart-item {
+            display: flex;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .item-image {
+            width: 200px;
+            height: 200px;
+            background-color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .item-image img {
+            max-width: 80%;
+            max-height: 80%;
+            object-fit: contain;
+        }
+
+        .item-details {
+            padding: 20px;
+            flex: 1;
+            position: relative;
+        }
+
+        .item-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .item-category {
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .item-stock {
+            font-size: 14px;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #e44d26;
+        }
+
+        .item-price {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-weight: bold;
+        }
+
+        .quantity-selector {
+            margin-top: 20px;
+            width: 80px;
+            position: relative;
+        }
+
+        .quantity-selector select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            appearance: none;
+            background-color: white;
+        }
+
+        .quantity-selector::after {
+            content: "▼";
+            font-size: 12px;
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        .item-actions {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .remove-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .tax-info {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        .promo-section {
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+        }
+
+        .promo-btn {
+            background-color: white;
+            border: 1px solid #000;
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .promo-link {
+            text-decoration: none;
+            color: #000;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .checkout-btn {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 15px 20px;
+            background-color: #000;
+            color: white;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 25px;
+            text-decoration: none;
+        }
+
+        .continue-shopping {
+            display: inline-block;
+            padding: 15px 20px;
+            background-color: #fff;
+            color: #000;
+            border: 1px solid #000;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 25px;
+            text-decoration: none;
+            width: 100%;
+            text-align: center;
+        }
+
+        .payment-section h3 {
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .payment-methods {
+            display: flex;
+            gap: 10px;
+        }
+
+        .payment-methods img {
+            height: 30px;
+        }
+
+        .divider {
+            border-top: 1px solid #e0e0e0;
+            margin: 20px 0;
+        }
+        
+        .empty-cart {
+            text-align: center;
+            padding: 50px 0;
+        }
+
+        .empty-cart p {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <% 
+            List<CartItem> cart = (List<CartItem>) session.getAttribute("cart");
+            Integer cartSize = (Integer) session.getAttribute("cartSize");
             
-            .product-image {
-                width: 80px;
-                height: 80px;
-                object-fit: cover;
-                border-radius: 4px;
-                margin-right: 15px;
-            }
+            if (cart == null || cart.isEmpty()) {
+        %>
+            <div class="empty-cart" style="width: 100%;">
+                <p>Your bag is empty</p>
+                <a href="<%= request.getContextPath() %>/ProductServlet" class="continue-shopping">CONTINUE SHOPPING</a>
+            </div>
+        <% 
+            } else {
+                DecimalFormat df = new DecimalFormat("#,##0.00");
+                double totalAmount = 0;
+                for(CartItem item : cart) {
+                    totalAmount += item.getSubtotal();
+                }
+        %>
+            <div class="bag-section">
+                <h1>YOUR BAG</h1>
+                <div class="total-info">TOTAL [<%= cartSize %> items] <b>RM<%= df.format(totalAmount) %></b></div>
+                <div class="reservation-note">Items in your bag are not reserved — check out now to make them yours.</div>
 
-            .product-name {
-                font-weight: bold;
-            }
+                <% 
+                    for(CartItem item : cart) {
+                %>
+                    <div class="cart-item">
+                        <div class="item-image">
+                            <img src="<%= request.getContextPath() %>/ProductImages/<%= item.getProduct().getImageUrl() %>" alt="<%= item.getProduct().getName() %>">
+                        </div>
+                        <div class="item-details">
+                            <div class="item-name"><%= item.getProduct().getName() %></div>
+                            <div class="item-category"><%= item.getProduct().getCategory() != null ? item.getProduct().getCategory().toUpperCase() : "" %></div>
+                            <div class="item-price">RM<%= df.format(item.getProduct().getPrice()) %></div>
 
-            .quantity-form {
-                display: flex;
-                align-items: center;
-            }
+                            <form action="<%= request.getContextPath() %>/UpdateCartServlet" method="POST" class="quantity-selector">
+                                <input type="hidden" name="productId" value="<%= item.getProduct().getId() %>">
+                                <select name="quantity" onchange="this.form.submit()">
+                                    <% for (int i = 1; i <= 10; i++) { %>
+                                        <option value="<%= i %>" <%= (item.getQuantity() == i) ? "selected" : "" %>><%= i %></option>
+                                    <% } %>
+                                </select>
+                            </form>
 
-            .quantity-input {
-                width: 60px;
-                padding: 5px;
-                margin-right: 10px;
-                text-align: center;
-            }
+                            <div class="item-actions">
+                                <form action="<%= request.getContextPath() %>/RemoveFromCartServlet" method="POST">
+                                    <input type="hidden" name="productId" value="<%= item.getProduct().getId() %>">
+                                    <button type="submit" class="remove-btn">✕</button>
+                                </form>
+                                <button class="action-btn">♡</button>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
 
-            .update-btn {
-                padding: 5px 10px;
-                background-color: #4CAF50;
-                color: white;
-                border: none;
-                cursor: pointer;
-                border-radius: 3px;
-            }
+            <div class="summary-section">
+                <h2>ORDER SUMMARY</h2>
+                <div class="summary-item">
+                    <span><%= cartSize %> items</span>
+                    <span>RM<%= df.format(totalAmount) %></span>
+                </div>
+                <div class="summary-item">
+                    <span>Delivery</span>
+                    <span>Free</span>
+                </div>
+                <div class="divider"></div>
+                <div class="summary-total">
+                    <span>Total</span>
+                    <span>RM<%= df.format(totalAmount) %></span>
+                </div>
+                <div class="tax-info">[Inclusive of tax RM0.00]</div>
 
-            .remove-btn {
-                padding: 5px 10px;
-                background-color: #f44336;
-                color: white;
-                border: none;
-                cursor: pointer;
-                border-radius: 3px;
-            }
+                <div class="promo-section">
+                    <button class="promo-btn">+</button>
+                    <a href="#" class="promo-link">USE A PROMO CODE</a>
+                </div>
 
-            .cart-summary {
-                background-color: #f8f8f8;
-                padding: 20px;
-                border-radius: 5px;
-            }
-
-            .summary-row {
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 10px;
-            }
-
-            .total {
-                font-size: 18px;
-                font-weight: bold;
-                margin-top: 10px;
-            }
-
-            .cart-actions {
-                display: flex;
-                justify-content: space-between;
-                margin-top: 20px;
-            }
-
-            .continue-shopping {
-                padding: 10px 15px;
-                background-color: #2196F3;
-                color: white;
-                text-decoration: none;
-                border-radius: 4px;
-                display: inline-block;
-            }
-
-            .checkout-btn {
-                padding: 10px 15px;
-                background-color: #4CAF50;
-                color: white;
-                text-decoration: none;
-                border-radius: 4px;
-                display: inline-block;
-            }
-
-            .continue-shopping:hover,
-            .checkout-btn:hover,
-            .update-btn:hover,
-            .remove-btn:hover {
-                opacity: 0.9;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>Your Shopping Cart</h1>
-            
-            <% 
-                List<CartItem> cart = (List<CartItem>) session.getAttribute("cart");
-                Integer cartSize = (Integer) session.getAttribute("cartSize");
+                <a href="<%= request.getContextPath() %>/CheckoutServlet" class="checkout-btn">
+                    <span>CHECKOUT</span>
+                    <span>→</span>
+                </a>
                 
-                if (cart == null || cart.isEmpty()) {
-            %>
-                <div class="empty-cart">
-                    <p>Your cart is empty</p>
-                    <a href="<%= request.getContextPath() %>/ProductServlet" class="continue-shopping">Continue Shopping</a>
-                </div>
-            <% 
-                } else {
-                    DecimalFormat df = new DecimalFormat("#,##0.00");
-            %>
-                <div class="cart-items">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Product</th>
-                                <th>Price</th>
-                                <th>Quantity</th>
-                                <th>Subtotal</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% 
-                                double total = 0;
-                                for(CartItem item : cart) {
-                                    total += item.getSubtotal();
-                            %>
-                                <tr>
-                                    <td>
-                                        <div class="product-info">
-                                            <img class="product-image" src="<%= request.getContextPath() %>/ProductImages/<%= item.getProduct().getImageUrl() %>" alt="<%= item.getProduct().getName() %>">
-                                            <div class="product-name"><%= item.getProduct().getName() %></div>
-                                        </div>
-                                    </td>
-                                    <td>RM <%= df.format(item.getProduct().getPrice()) %></td>
-                                    <td>
-                                        <form action="<%= request.getContextPath() %>/UpdateCartServlet" method="POST" class="quantity-form">
-                                            <input type="hidden" name="productId" value="<%= item.getProduct().getId() %>">
-                                            <input type="number" name="quantity" value="<%= item.getQuantity() %>" min="1" max="10" class="quantity-input">
-                                            <button type="submit" class="update-btn">Update</button>
-                                        </form>
-                                    </td>
-                                    <td>RM <%= df.format(item.getSubtotal()) %></td>
-                                    <td>
-                                        <form action="<%= request.getContextPath() %>/RemoveFromCartServlet" method="POST">
-                                            <input type="hidden" name="productId" value="<%= item.getProduct().getId() %>">
-                                            <button type="submit" class="remove-btn">Remove</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            <% } %>
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="cart-summary">
-                    <div class="summary-row">
-                        <span>Total Items:</span>
-                        <span><%= cartSize %></span>
-                    </div>
-                    <div class="summary-row total">
-                        <span>Total:</span>
-                        <span>RM <%= df.format(total) %></span>
-                    </div>
-                    
-                    <div class="cart-actions">
-                        <a href="<%= request.getContextPath() %>/ProductServlet" class="continue-shopping">Continue Shopping</a>
-                        <a href="<%= request.getContextPath() %>/CheckoutServlet" class="checkout-btn">Proceed to Checkout</a>
-                    </div>
-                </div>
-            <% } %>
-        </div>
-    </body>
+                <a href="<%= request.getContextPath() %>/ProductServlet" class="continue-shopping">CONTINUE SHOPPING</a>
+            </div>
+        <% } %>
+    </div>
+</body>
 </html>
