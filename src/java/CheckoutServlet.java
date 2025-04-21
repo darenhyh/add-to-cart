@@ -6,10 +6,19 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
+import java.util.regex.Pattern;
 import model.CartItem;
 
 @WebServlet("/CheckoutServlet")
 public class CheckoutServlet extends HttpServlet {
+    
+    // Regular expression for email validation
+    private static final String EMAIL_REGEX = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(EMAIL_REGEX);
+    
+    // Regular expression for phone validation (Malaysian format: starts with 0, 10-11 digits)
+    private static final String PHONE_REGEX = "^0\\d{9,10}$";
+    private static final Pattern PHONE_PATTERN = Pattern.compile(PHONE_REGEX);
     
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -49,6 +58,7 @@ public class CheckoutServlet extends HttpServlet {
         session.setAttribute("taxAmount", taxAmount);
         session.setAttribute("deliveryFee", deliveryFee);
         session.setAttribute("totalAmount", totalAmount);
+        session.setAttribute("validEmail", false); // Initially set email validation to false
         
         // Forward to payment shipping page
         request.getRequestDispatcher("/JSP/PaymentShipping.jsp").forward(request, response);
@@ -57,7 +67,7 @@ public class CheckoutServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Process form submission from payment page
+        
         HttpSession session = request.getSession();
         
         // Get form data
@@ -74,24 +84,70 @@ public class CheckoutServlet extends HttpServlet {
         String deliveryMethod = request.getParameter("deliveryMethod");
         String paymentMethod = request.getParameter("paymentMethod");
         
-        // Store checkout information in session
-        session.setAttribute("checkoutEmail", email);
-        session.setAttribute("checkoutFirstName", firstName);
-        session.setAttribute("checkoutLastName", lastName);
-        session.setAttribute("checkoutAddress1", address1);
-        session.setAttribute("checkoutAddress2", address2);
-        session.setAttribute("checkoutAdditionalInfo", additionalInfo);
-        session.setAttribute("checkoutState", state);
-        session.setAttribute("checkoutCity", city);
-        session.setAttribute("checkoutPostalCode", postalCode);
-        session.setAttribute("checkoutPhoneNumber", phoneNumber);
-        session.setAttribute("checkoutDeliveryMethod", deliveryMethod);
-        session.setAttribute("checkoutPaymentMethod", paymentMethod);
+        // Validate email
+        boolean isValidEmail = validateEmail(email);
+        session.setAttribute("validEmail", isValidEmail);
         
-        // Process order - in a real application, this would create an order in the database
-        // and handle payment processing
+        // Validate phone number
+        boolean isValidPhone = validatePhone(phoneNumber);
+        session.setAttribute("validPhone", isValidPhone);
         
-        // For this example, we'll just redirect to a confirmation page
-        response.sendRedirect(request.getContextPath() + "/JSP/OrderConfirmation.jsp");
+        // If email is invalid, redirect back to checkout page with error
+        if (!isValidEmail) {
+            request.setAttribute("emailError", "Please check your email address is correct.");
+            request.getRequestDispatcher("/JSP/PaymentShipping.jsp").forward(request, response);
+            return;
+        }
+        
+        // If phone is invalid, redirect back with error
+        if (!isValidPhone) {
+            request.setAttribute("phoneError", "Please enter a valid Malaysian phone number (starts with 0, 10-11 digits).");
+            request.getRequestDispatcher("/JSP/PaymentShipping.jsp").forward(request, response);
+            return;
+        }
+        
+        // Proceed only if both email and phone are valid
+        if (isValidEmail && isValidPhone) {
+            // Store checkout information in session
+            session.setAttribute("checkoutEmail", email);
+            session.setAttribute("checkoutFirstName", firstName);
+            session.setAttribute("checkoutLastName", lastName);
+            session.setAttribute("checkoutAddress1", address1);
+            session.setAttribute("checkoutAddress2", address2);
+            session.setAttribute("checkoutAdditionalInfo", additionalInfo);
+            session.setAttribute("checkoutState", state);
+            session.setAttribute("checkoutCity", city);
+            session.setAttribute("checkoutPostalCode", postalCode);
+            session.setAttribute("checkoutPhoneNumber", phoneNumber);
+            session.setAttribute("checkoutDeliveryMethod", deliveryMethod);
+            session.setAttribute("checkoutPaymentMethod", paymentMethod);
+            
+            // For this example, we'll just redirect to a confirmation page
+            response.sendRedirect(request.getContextPath() + "/JSP/OrderConfirmation.jsp");
+        }
+    }
+    
+    /**
+     * Validates email address format
+     * @param email The email to validate
+     * @return True if valid, false otherwise
+     */
+    private boolean validateEmail(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            return false;
+        }
+        return EMAIL_PATTERN.matcher(email).matches();
+    }
+    
+    /**
+     * Validates Malaysian phone number format
+     * @param phone The phone number to validate
+     * @return True if valid, false otherwise
+     */
+    private boolean validatePhone(String phone) {
+        if (phone == null || phone.trim().isEmpty()) {
+            return false;
+        }
+        return PHONE_PATTERN.matcher(phone).matches();
     }
 }
