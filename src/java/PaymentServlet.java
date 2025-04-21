@@ -1,136 +1,82 @@
-import java.io.IOException;
-import java.sql.SQLException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import dao.PaymentDAO;
-import java.io.PrintWriter;
-import model.*;
+import java.io.IOException;
+import java.util.List;
+import model.CartItem;
 
 @WebServlet("/PaymentServlet")
 public class PaymentServlet extends HttpServlet {
+    
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-        // Get all parameters
-            String paymentMethod = request.getParameter("payment_method");
-            String fullName = request.getParameter("shippingName");
-            String email = request.getParameter("shippingEmail");
-            String mobile = request.getParameter("shippingMobile");
-            String address = request.getParameter("shippingAddress");
-            String city = request.getParameter("shippingCity");
-            String state = request.getParameter("shippingState");
-            String postcode = request.getParameter("shippingPostcode");
-
-            String cardOwner = request.getParameter("cardOwner");
-            String cardNumber = request.getParameter("cardNumber");
-            String expMonth = request.getParameter("expMonth");
-            String expYear = request.getParameter("expYear");
-            String cvv = request.getParameter("cvv");
-
-            // Validate required fields
-            if (!PaymentValidator.validateRequiredFields(fullName, email, mobile, 
-                    address, city, state, postcode, paymentMethod)) {
-                request.setAttribute("errorMsg", "All fields are required!");
-                request.getRequestDispatcher("/JSP/PaymentShipping.jsp").forward(request, response);
-                return;
-            }
-
-            // Validate email
-            if (!PaymentValidator.validateEmail(email)) {
-                request.setAttribute("errorMsg", "Invalid email format!");
-                request.getRequestDispatcher("/JSP/PaymentShipping.jsp").forward(request, response);
-                return;
-            }
-
-            // Validate mobile
-            if (!PaymentValidator.validateMobile(mobile)) {
-                request.setAttribute("errorMsg", "Invalid mobile format! Use 01X-XXXXXXX");
-                request.getRequestDispatcher("/JSP/PaymentShipping.jsp").forward(request, response);
-                return;
-            }
-
-            // Validate card details if payment is by card
-            if (paymentMethod.equals("visa") || paymentMethod.equals("master")) {
-                if (!PaymentValidator.validateRequiredFields(cardOwner, cardNumber, expMonth, expYear, cvv)) {
-                    request.setAttribute("errorMsg", "All card details are required for card payment!");
-                    request.getRequestDispatcher("/JSP/PaymentShipping.jsp").forward(request, response);
-                    return;
-                }
-
-                if (!PaymentValidator.validateCardNumber(cardNumber)) {
-                    request.setAttribute("errorMsg", "Invalid card number! Must be 15 or 16 digits");
-                    request.getRequestDispatcher("/JSP/PaymentShipping.jsp").forward(request, response);
-                    return;
-                }
-
-                if (!PaymentValidator.validateCVV(cvv)) {
-                    request.setAttribute("errorMsg", "Invalid CVV! Must be 3 digits");
-                    request.getRequestDispatcher("/JSP/PaymentShipping.jsp").forward(request, response);
-                    return;
-                }
-
-                if (!PaymentValidator.validateExpYear(expYear)) {
-                    request.setAttribute("errorMsg", "Invalid expiration year! Must be between 2025-2100");
-                    request.getRequestDispatcher("/JSP/PaymentShipping.jsp").forward(request, response);
-                    return;
-                }
-            }
-
-            try {
-                // Create model objects
-                PaymentMethod pm = new PaymentMethod();
-                pm.setMethodName(paymentMethod);
-
-                if (paymentMethod.equals("visa") || paymentMethod.equals("master")) {
-                    pm.setCardOwner(cardOwner);
-                    pm.setCardNumber(cardNumber);
-                    pm.setExpMonth(expMonth);
-                    pm.setExpYear(expYear);
-                    pm.setCvv(cvv);
-                }
-
-                BuyerDetail buyer = new BuyerDetail(fullName, email, mobile);
-                Address addr = new Address(address, city, state, postcode);
-
-                // Process payment
-                PaymentDAO dao = new PaymentDAO();
-                Payment payment = dao.processPayment(pm, buyer, addr);
-
-                // Store in session for the thank you page
-                HttpSession session = request.getSession();
-                session.setAttribute("payment", payment);
-                session.setAttribute("buyer", buyer);
-                
-                // Store address details for the thank you page
-                session.setAttribute("shippingAddress", address);
-                session.setAttribute("shippingCity", city);
-                session.setAttribute("shippingState", state);
-                session.setAttribute("shippingPostcode", postcode);
-
-                // Set transaction ID for thank you page if not generated by DAO
-                if (payment.getTransactionId() == null) {
-                    payment.setTransactionId("TRX" + System.currentTimeMillis());
-                }
-
-                // Redirect to success page
-                response.sendRedirect(request.getContextPath() + "/JSP/ThankYou.jsp");
-
-            } catch (SQLException e) {
-                e.printStackTrace();
-                request.setAttribute("errorMsg", "Database error occurred: " + e.getMessage());
-                request.getRequestDispatcher("/JSP/PaymentShipping.jsp").forward(request, response);
-            }
+        
+        HttpSession session = request.getSession();
+        List<CartItem> cart = (List<CartItem>) session.getAttribute("cart");
+        
+        // Check if cart exists and is not empty
+        if (cart == null || cart.isEmpty()) {
+            // Redirect back to cart with a message
+            response.sendRedirect(request.getContextPath() + "/CartServlet");
+            return;
         }
+        
+        // Calculate subtotal
+        double subtotal = 0.0;
+        for (CartItem item : cart) {
+            subtotal += item.getSubtotal();
+        }
+        
+        // Calculate tax (16%)
+        double taxRate = 0.16;
+        double taxAmount = subtotal * taxRate;
+        
+        // Calculate delivery fee
+        double deliveryFee = 0.0;
+        if (subtotal < 1000) {
+            deliveryFee = 50.0; // RM50 delivery fee
+        }
+        
+        // Calculate total
+        double totalAmount = subtotal + taxAmount + deliveryFee;
+        
+        // Store all values in session for use in JSP
+        session.setAttribute("subtotal", subtotal);
+        session.setAttribute("taxAmount", taxAmount);
+        session.setAttribute("deliveryFee", deliveryFee);
+        session.setAttribute("totalAmount", totalAmount);
+        
+        // Forward to payment shipping page
+        request.getRequestDispatcher("/JSP/PaymentShipping.jsp").forward(request, response);
     }
-
+    
     @Override
-    public String getServletInfo() {
-        return "Payment Processing Servlet";
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        // Handle payment processing
+        // For demonstration purposes, we're just redirecting to the order confirmation
+        
+        // In a real application, you would:
+        // 1. Validate payment information
+        // 2. Process the payment through a payment gateway
+        // 3. Create an order record in the database
+        // 4. Update inventory
+        // 5. Clear the cart
+        // 6. Send confirmation email
+        
+        // Clear cart after successful order
+        HttpSession session = request.getSession();
+        session.removeAttribute("cart");
+        session.setAttribute("cartSize", 0);
+        
+        // Set an order confirmation message
+        session.setAttribute("orderConfirmationMessage", "Your order has been placed successfully!");
+        
+        // Redirect to order confirmation page
+        response.sendRedirect(request.getContextPath() + "/JSP/OrderConfirmation.jsp");
     }
 }
