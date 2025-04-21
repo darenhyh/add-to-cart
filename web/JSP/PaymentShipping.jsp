@@ -465,17 +465,17 @@
                     <div class="form-group">
                         <label class="form-label">Phone Number *</label>
                         <div style="position: relative;">
-                            <input type="tel" class="form-control" value="01110111166" required>
+                            <input type="tel" class="form-control" value="" required>
                             <span class="validation-icon">✓</span>
                         </div>
                     </div>
                     <div class="form-hint">We will only call you if there are questions regarding your order.</div>
                     <div class="checkbox-label">
-                        <input type="checkbox" id="sameAddress" checked>
+                        <input type="checkbox" id="sameAddress" required>
                         <label for="sameAddress">My billing and delivery information are the same.</label>
                     </div>
                     <div class="checkbox-label">
-                        <input type="checkbox" id="ageCheck" checked>
+                        <input type="checkbox" id="ageCheck" required>
                         <label for="ageCheck">I'm 16+ years old.</label>
                     </div>
                 </div>

@@ -277,10 +277,29 @@
         <% 
             } else {
                 DecimalFormat df = new DecimalFormat("#,##0.00");
-                double totalAmount = 0;
+                double subtotal = 0;
                 for(CartItem item : cart) {
-                    totalAmount += item.getSubtotal();
+                    subtotal += item.getSubtotal();
                 }
+                
+                // Calculate tax (16%)
+                double taxRate = 0.16;
+                double taxAmount = subtotal * taxRate;
+                
+                // Calculate delivery fee
+                double deliveryFee = 0.0;
+                if (subtotal < 1000) {
+                    deliveryFee = 50.0; // RM50 delivery fee
+                }
+                
+                // Calculate total
+                double totalAmount = subtotal + taxAmount + deliveryFee;
+                
+                // Store values in session for checkout
+                session.setAttribute("subtotal", subtotal);
+                session.setAttribute("taxAmount", taxAmount);
+                session.setAttribute("deliveryFee", deliveryFee);
+                session.setAttribute("totalAmount", totalAmount);
         %>
             <div class="bag-section">
                 <h1>YOUR BAG</h1>
@@ -324,25 +343,37 @@
                 <h2>ORDER SUMMARY</h2>
                 <div class="summary-item">
                     <span><%= cartSize %> items</span>
-                    <span>RM<%= df.format(totalAmount) %></span>
+                    <span>RM<%= df.format(subtotal) %></span>
+                </div>
+                <div class="summary-item">
+                    <span>Tax (16%)</span>
+                    <span>RM<%= df.format(taxAmount) %></span>
                 </div>
                 <div class="summary-item">
                     <span>Delivery</span>
-                    <span>Free</span>
+                    <% if (deliveryFee > 0) { %>
+                        <span>RM<%= df.format(deliveryFee) %></span>
+                    <% } else { %>
+                        <span>Free</span>
+                    <% } %>
                 </div>
                 <div class="divider"></div>
                 <div class="summary-total">
                     <span>Total</span>
                     <span>RM<%= df.format(totalAmount) %></span>
                 </div>
-                <div class="tax-info">[Inclusive of tax RM0.00]</div>
+                <% if (subtotal < 1000) { %>
+                <div class="tax-info">Add RM<%= df.format(1000 - subtotal) %> more to qualify for free shipping</div>
+                <% } else { %>
+                <div class="tax-info">You have qualified for free shipping!</div>
+                <% } %>
 
                 <div class="promo-section">
                     <button class="promo-btn">+</button>
                     <a href="#" class="promo-link">USE A PROMO CODE</a>
                 </div>
 
-                <a href="<%= request.getContextPath() %>/PaymentServlet" class="checkout-btn">
+                <a href="<%= request.getContextPath() %>/CheckoutServlet" class="checkout-btn">
                     <span>CHECKOUT</span>
                     <span>→</span>
                 </a>
