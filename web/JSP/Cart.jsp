@@ -342,7 +342,7 @@
                     <a href="#" class="promo-link">USE A PROMO CODE</a>
                 </div>
 
-                <a href="<%= request.getContextPath() %>/CheckoutServlet" class="checkout-btn">
+                <a href="<%= request.getContextPath() %>/PaymentServlet" class="checkout-btn">
                     <span>CHECKOUT</span>
                     <span>→</span>
                 </a>
