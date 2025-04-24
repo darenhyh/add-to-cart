@@ -261,6 +261,22 @@
             margin-bottom: 20px;
         }
     </style>
+    <script>
+        // Function to update the displayed item price when quantity changes
+        function updatePrice(select, unitPrice) {
+            const quantity = parseInt(select.value);
+            const totalPrice = (unitPrice * quantity).toFixed(2);
+            
+            // Find the price display element
+            const priceElement = select.closest('.item-details').querySelector('.item-price');
+            
+            // Update the price display
+            priceElement.innerHTML = 'RM' + totalPrice;
+            
+            // Submit the form to update the cart on the server
+            select.form.submit();
+        }
+    </script>
 </head>
 <body>
     <div class="container">
@@ -316,11 +332,11 @@
                         <div class="item-details">
                             <div class="item-name"><%= item.getProduct().getName() %></div>
                             <div class="item-category"><%= item.getProduct().getCategory() != null ? item.getProduct().getCategory().toUpperCase() : "" %></div>
-                            <div class="item-price">RM<%= df.format(item.getProduct().getPrice()) %></div>
+                            <div class="item-price">RM<%= df.format(item.getSubtotal()) %></div>
 
                             <form action="<%= request.getContextPath() %>/UpdateCartServlet" method="POST" class="quantity-selector">
                                 <input type="hidden" name="productId" value="<%= item.getProduct().getId() %>">
-                                <select name="quantity" onchange="this.form.submit()">
+                                <select name="quantity" onchange="updatePrice(this, <%= item.getProduct().getPrice() %>)">
                                     <% for (int i = 1; i <= 10; i++) { %>
                                         <option value="<%= i %>" <%= (item.getQuantity() == i) ? "selected" : "" %>><%= i %></option>
                                     <% } %>
