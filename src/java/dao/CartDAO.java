@@ -8,9 +8,9 @@ import java.util.List;
 
 public class CartDAO {
     
-    private static final String JDBC_URL = "jdbc:derby://localhost:1527/glowydays;create=true";
-    private static final String USERNAME = "nbuser";
-    private static final String PASSWORD = "nbuser";
+    private static final String JDBC_URL = "jdbc:derby://localhost:1527/product";
+    private static final String USERNAME = "userrrrrrrr";
+    private static final String PASSWORD = "pass";
     
     // Save cart item to database
     public boolean addCartItem(int userId, CartItem item) {
@@ -23,7 +23,7 @@ public class CartDAO {
             conn = DriverManager.getConnection(JDBC_URL, USERNAME, PASSWORD);
             
             // Check if user already has a cart
-            String cartQuery = "SELECT CartID FROM Cart WHERE UserID = ?";
+            String cartQuery = "SELECT CartID FROM APP.Cart WHERE UserID = ?";
             stmt = conn.prepareStatement(cartQuery);
             stmt.setInt(1, userId);
             rs = stmt.executeQuery();
@@ -48,7 +48,7 @@ public class CartDAO {
             }
             
             // Check if the product is already in the cart
-            String checkItemQuery = "SELECT CartDetailsID, Quantity FROM CartDetails WHERE CartID = ? AND ProductID = ?";
+            String checkItemQuery = "SELECT CartDetailID, Quantity FROM APP.CartDetails WHERE CartID = ? AND ProductID = ?";
             stmt = conn.prepareStatement(checkItemQuery);
             stmt.setInt(1, cartId);
             stmt.setInt(2, item.getProduct().getId());
@@ -56,18 +56,18 @@ public class CartDAO {
             
             if (rs.next()) {
                 // Update existing cart item quantity
-                int cartDetailsId = rs.getInt("CartDetailsID");
+                int cartDetailsId = rs.getInt("CartDetailID");
                 int currentQuantity = rs.getInt("Quantity");
                 int newQuantity = currentQuantity + item.getQuantity();
                 
-                String updateQuery = "UPDATE CartDetails SET Quantity = ? WHERE CartDetailsID = ?";
+                String updateQuery = "UPDATE APP.CartDetails SET Quantity = ? WHERE CartDetailID = ?";
                 stmt = conn.prepareStatement(updateQuery);
                 stmt.setInt(1, newQuantity);
                 stmt.setInt(2, cartDetailsId);
                 stmt.executeUpdate();
             } else {
                 // Add new cart item
-                String insertQuery = "INSERT INTO CartDetails (CartID, ProductID, Quantity) VALUES (?, ?, ?)";
+                String insertQuery = "INSERT INTO APP.CartDetails (CartID, ProductID, Quantity) VALUES (?, ?, ?)";
                 stmt = conn.prepareStatement(insertQuery);
                 stmt.setInt(1, cartId);
                 stmt.setInt(2, item.getProduct().getId());
@@ -103,7 +103,7 @@ public class CartDAO {
             conn = DriverManager.getConnection(JDBC_URL, USERNAME, PASSWORD);
             
             // Get cart ID for user
-            String cartQuery = "SELECT CartID FROM Cart WHERE UserID = ?";
+            String cartQuery = "SELECT CartID FROM APP.Cart WHERE UserID = ?";
             stmt = conn.prepareStatement(cartQuery);
             stmt.setInt(1, userId);
             rs = stmt.executeQuery();
@@ -112,9 +112,9 @@ public class CartDAO {
                 int cartId = rs.getInt("CartID");
                 
                 // Get cart items with product information
-                String itemsQuery = "SELECT cd.CartDetailsID, cd.ProductID, cd.Quantity, " +
+                String itemsQuery = "SELECT cd.CartDetailID, cd.ProductID, cd.Quantity, " +
                                    "p.PRODUCTNAME, p.DESCRIPTION, p.CATEGORY, p.PRICE, p.STOCK_QUANTITY, p.IMAGE_URL " +
-                                   "FROM CartDetails cd " +
+                                   "FROM APP.CartDetails cd " +
                                    "JOIN APP.PRODUCTS p ON cd.ProductID = p.PRODUCT_ID " +
                                    "WHERE cd.CartID = ?";
                                    
@@ -135,7 +135,7 @@ public class CartDAO {
                     
                     // Create CartItem object
                     CartItem item = new CartItem();
-                    item.setId(rs.getInt("CartDetailsID"));
+                    item.setId(rs.getInt("CartDetailID"));
                     item.setProduct(product);
                     item.setQuantity(rs.getInt("Quantity"));
                     
@@ -167,7 +167,7 @@ public class CartDAO {
             Class.forName("org.apache.derby.jdbc.ClientDriver");
             conn = DriverManager.getConnection(JDBC_URL, USERNAME, PASSWORD);
             
-            String updateQuery = "UPDATE CartDetails SET Quantity = ? WHERE CartDetailsID = ?";
+            String updateQuery = "UPDATE APP.CartDetails SET Quantity = ? WHERE CartDetailID = ?";
             stmt = conn.prepareStatement(updateQuery);
             stmt.setInt(1, quantity);
             stmt.setInt(2, cartDetailsId);
@@ -197,7 +197,7 @@ public class CartDAO {
             Class.forName("org.apache.derby.jdbc.ClientDriver");
             conn = DriverManager.getConnection(JDBC_URL, USERNAME, PASSWORD);
             
-            String deleteQuery = "DELETE FROM CartDetails WHERE CartDetailsID = ?";
+            String deleteQuery = "DELETE FROM APP.CartDetails WHERE CartDetailID = ?";
             stmt = conn.prepareStatement(deleteQuery);
             stmt.setInt(1, cartDetailsId);
             
@@ -228,7 +228,7 @@ public class CartDAO {
             conn = DriverManager.getConnection(JDBC_URL, USERNAME, PASSWORD);
             
             // Get cart ID for user
-            String cartQuery = "SELECT CartID FROM Cart WHERE UserID = ?";
+            String cartQuery = "SELECT CartID FROM APP.Cart WHERE UserID = ?";
             stmt = conn.prepareStatement(cartQuery);
             stmt.setInt(1, userId);
             rs = stmt.executeQuery();
@@ -237,7 +237,7 @@ public class CartDAO {
                 int cartId = rs.getInt("CartID");
                 
                 // Delete all items in the cart
-                String deleteQuery = "DELETE FROM CartDetails WHERE CartID = ?";
+                String deleteQuery = "DELETE FROM APP.CartDetails WHERE CartID = ?";
                 stmt = conn.prepareStatement(deleteQuery);
                 stmt.setInt(1, cartId);
                 stmt.executeUpdate();
@@ -273,7 +273,7 @@ public class CartDAO {
             conn = DriverManager.getConnection(JDBC_URL, USERNAME, PASSWORD);
             
             // Get cart ID for user
-            String cartQuery = "SELECT CartID FROM Cart WHERE UserID = ?";
+            String cartQuery = "SELECT CartID FROM APP.Cart WHERE UserID = ?";
             stmt = conn.prepareStatement(cartQuery);
             stmt.setInt(1, userId);
             rs = stmt.executeQuery();
@@ -282,7 +282,7 @@ public class CartDAO {
                 int cartId = rs.getInt("CartID");
                 
                 // Count items in cart
-                String countQuery = "SELECT SUM(Quantity) as TotalItems FROM CartDetails WHERE CartID = ?";
+                String countQuery = "SELECT SUM(Quantity) as TotalItems FROM APP.CartDetails WHERE CartID = ?";
                 stmt = conn.prepareStatement(countQuery);
                 stmt.setInt(1, cartId);
                 rs = stmt.executeQuery();
